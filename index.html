@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromashift</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Chromashift</h1>
+        <div class="game-stats">
+            <div>Score: <span id="score">0</span></div>
+            <div class="timer" id="timer">60s</div>
+        </div>
+        <div class="info-panel">
+            Target Color: <span class="target-color" id="targetColorDisplay"></span>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <button onclick="startGame()">Start Game</button>
+        <div class="instructions">
+            Match the tiles with the target color. The faster you match, the higher your score!
+        </div>
+        <div class="level-indicator" id="levelIndicator">Level: 1</div>
+    </div>
+    <div class="modal" id="gameOverModal">
+        <div class="modal-content">
+            <h2>Game Over</h2>
+            <p>Your Score: <span id="finalScore">0</span></p>
+            <button onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+    <script>
+        const gameBoard = document.getElementById("gameBoard");
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const targetColorDisplay = document.getElementById("targetColorDisplay");
+        const gameOverModal = document.getElementById("gameOverModal");
+        const finalScoreDisplay = document.getElementById("finalScore");
+        const levelIndicator = document.getElementById("levelIndicator");
+
+        let score = 0, timeLeft = 60, level = 1, targetColor = "", cells = [], timer;
+
+        const colors = ["#e74c3c", "#3498db", "#2ecc71", "#f1c40f", "#9b59b6", "#1abc9c", "#e67e22", "#ff4757"];
+
+        function generateBoard() {
+            gameBoard.innerHTML = "";
+            cells = [];
+            const gridSize = 25;
+            targetColor = colors[Math.floor(Math.random() * colors.length)];
+            targetColorDisplay.style.backgroundColor = targetColor;
+
+            for (let i = 0; i < gridSize; i++) {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                cell.style.backgroundColor = color;
+                if (color === targetColor) {
+                    cell.dataset.match = "true";
+                }
+                cell.addEventListener("click", () => handleCellClick(cell));
+                gameBoard.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        function handleCellClick(cell) {
+            if (cell.dataset.matched || cell.classList.contains("matched")) return;
+            if (cell.dataset.match === "true") {
+                score += 10;
+                cell.classList.add("matched");
+                scoreDisplay.textContent = score;
+                if (cells.every(c => c.dataset.match !== "true" || c.classList.contains("matched"))) {
+                    level++;
+                    levelIndicator.textContent = `Level: ${level}`;
+                    generateBoard();
+                }
+            } else {
+                score = Math.max(0, score - 5);
+                scoreDisplay.textContent = score;
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            level = 1;
+            timeLeft = 60;
+            scoreDisplay.textContent = score;
+            levelIndicator.textContent = "Level: 1";
+            gameOverModal.classList.remove("show");
+            generateBoard();
+            clearInterval(timer);
+            timerDisplay.textContent = `${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            finalScoreDisplay.textContent = score;
+            gameOverModal.classList.add("show");
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
